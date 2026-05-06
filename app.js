@@ -6,6 +6,27 @@
 // ── Utilities ─────────────────────────────────────────
 function $(id) { return document.getElementById(id); }
 
+// ── Toast notification ────────────────────────────────
+function showToast(message, type = 'info') {
+  let container = document.getElementById('toast-container');
+  if (!container) {
+    container = document.createElement('div');
+    container.id = 'toast-container';
+    document.body.appendChild(container);
+  }
+  const toast = document.createElement('div');
+  toast.className = `toast toast-${type}`;
+  toast.textContent = message;
+  container.appendChild(toast);
+  // trigger reflow for CSS transition
+  void toast.offsetWidth;
+  toast.classList.add('toast-visible');
+  setTimeout(() => {
+    toast.classList.remove('toast-visible');
+    toast.addEventListener('transitionend', () => toast.remove(), { once: true });
+  }, 3500);
+}
+
 function load(key, fallback) {
   try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : fallback; }
   catch { return fallback; }
@@ -246,7 +267,7 @@ function startTimer() {
       sessionCount++;
       save(todayKey(), sessionCount);
       $('session-count').textContent = sessionCount;
-      alert('⏰ Time\'s up! Great work!');
+      showToast('⏰ Time\'s up! Great work!', 'success');
       remaining = totalSeconds;
       displayTime(remaining);
     }
@@ -379,11 +400,11 @@ $('sched-save-btn').addEventListener('click', () => {
   const room    = $('sched-room').value.trim();
 
   if (!subject || !start || !end) {
-    alert('Please fill in subject, start time, and end time.');
+    showToast('Please fill in subject, start time, and end time.', 'error');
     return;
   }
   if (start >= end) {
-    alert('End time must be after start time.');
+    showToast('End time must be after start time.', 'error');
     return;
   }
 

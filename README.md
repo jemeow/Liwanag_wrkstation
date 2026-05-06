@@ -1,6 +1,6 @@
 # ☀️ Liwanag — Student Workstation
 
-A lightweight, browser-based workstation designed to help students stay organised and focused.  
+A lightweight, browser-based workstation designed to help students stay organized and focused.  
 No installation required — just open `index.html` in any modern browser.
 
 ---
