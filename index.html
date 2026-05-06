@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Liwanag — Student Workstation</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <!-- ===== Header ===== -->
+  <header class="app-header">
+    <div class="header-brand">
+      <span class="brand-icon">☀️</span>
+      <span class="brand-name">Liwanag</span>
+      <span class="brand-sub">Student Workstation</span>
+    </div>
+    <div class="header-meta">
+      <span id="clock" class="clock"></span>
+      <span id="today-date" class="today-date"></span>
+    </div>
+  </header>
+
+  <!-- ===== Main Layout ===== -->
+  <div class="app-body">
+
+    <!-- ===== Sidebar ===== -->
+    <nav class="sidebar">
+      <button class="nav-btn active" data-panel="tasks">📋 Tasks</button>
+      <button class="nav-btn" data-panel="notes">📝 Notes</button>
+      <button class="nav-btn" data-panel="timer">⏱ Timer</button>
+      <button class="nav-btn" data-panel="schedule">📅 Schedule</button>
+    </nav>
+
+    <!-- ===== Content ===== -->
+    <main class="content">
+
+      <!-- ── Tasks Panel ── -->
+      <section id="panel-tasks" class="panel active">
+        <div class="panel-header">
+          <h2>Assignment &amp; Task Tracker</h2>
+        </div>
+
+        <form id="task-form" class="add-form">
+          <input id="task-input" type="text" placeholder="Add a new task or assignment…" required />
+          <select id="task-subject">
+            <option value="">Subject (optional)</option>
+            <option value="Math">Math</option>
+            <option value="Science">Science</option>
+            <option value="English">English</option>
+            <option value="History">History</option>
+            <option value="Filipino">Filipino</option>
+            <option value="Other">Other</option>
+          </select>
+          <input id="task-due" type="date" title="Due date (optional)" />
+          <select id="task-priority">
+            <option value="normal">Normal</option>
+            <option value="high">High</option>
+            <option value="low">Low</option>
+          </select>
+          <button type="submit" class="btn btn-primary">Add</button>
+        </form>
+
+        <div class="filter-bar">
+          <button class="filter-btn active" data-filter="all">All</button>
+          <button class="filter-btn" data-filter="pending">Pending</button>
+          <button class="filter-btn" data-filter="done">Done</button>
+        </div>
+
+        <ul id="task-list" class="task-list"></ul>
+        <p id="task-empty" class="empty-msg">No tasks yet. Add one above!</p>
+      </section>
+
+      <!-- ── Notes Panel ── -->
+      <section id="panel-notes" class="panel">
+        <div class="panel-header">
+          <h2>Notes</h2>
+          <button id="new-note-btn" class="btn btn-primary">+ New Note</button>
+        </div>
+
+        <div class="notes-layout">
+          <ul id="note-list" class="note-list"></ul>
+          <div id="note-editor" class="note-editor">
+            <input id="note-title" type="text" placeholder="Note title…" />
+            <textarea id="note-body" placeholder="Start typing your notes here…"></textarea>
+            <div class="note-editor-actions">
+              <button id="save-note-btn" class="btn btn-primary">Save</button>
+              <button id="delete-note-btn" class="btn btn-danger" style="display:none">Delete</button>
+            </div>
+          </div>
+        </div>
+        <p id="note-empty" class="empty-msg" style="display:none">No notes yet. Click "+ New Note" to start.</p>
+      </section>
+
+      <!-- ── Timer Panel ── -->
+      <section id="panel-timer" class="panel">
+        <div class="panel-header">
+          <h2>Study Timer</h2>
+        </div>
+
+        <div class="timer-card">
+          <div class="timer-mode-tabs">
+            <button class="mode-tab active" data-mode="pomodoro">Pomodoro (25 min)</button>
+            <button class="mode-tab" data-mode="short">Short Break (5 min)</button>
+            <button class="mode-tab" data-mode="long">Long Break (15 min)</button>
+            <button class="mode-tab" data-mode="custom">Custom</button>
+          </div>
+
+          <div id="custom-time-row" class="custom-time-row" style="display:none">
+            <label>Minutes: <input id="custom-minutes" type="number" min="1" max="180" value="30" /></label>
+          </div>
+
+          <div class="timer-display">
+            <span id="timer-mm">25</span>:<span id="timer-ss">00</span>
+          </div>
+
+          <div class="timer-controls">
+            <button id="timer-start" class="btn btn-primary">Start</button>
+            <button id="timer-pause" class="btn" disabled>Pause</button>
+            <button id="timer-reset" class="btn">Reset</button>
+          </div>
+
+          <p class="timer-sessions">Sessions completed today: <strong id="session-count">0</strong></p>
+        </div>
+      </section>
+
+      <!-- ── Schedule Panel ── -->
+      <section id="panel-schedule" class="panel">
+        <div class="panel-header">
+          <h2>Weekly Schedule</h2>
+          <button id="add-sched-btn" class="btn btn-primary">+ Add Class</button>
+        </div>
+
+        <div id="schedule-grid" class="schedule-grid">
+          <!-- generated by JS -->
+        </div>
+
+        <!-- Add class modal -->
+        <div id="sched-modal" class="modal" style="display:none">
+          <div class="modal-box">
+            <h3>Add Class</h3>
+            <label>Subject
+              <input id="sched-subject" type="text" placeholder="e.g. Mathematics" />
+            </label>
+            <label>Day
+              <select id="sched-day">
+                <option value="Mon">Monday</option>
+                <option value="Tue">Tuesday</option>
+                <option value="Wed">Wednesday</option>
+                <option value="Thu">Thursday</option>
+                <option value="Fri">Friday</option>
+                <option value="Sat">Saturday</option>
+              </select>
+            </label>
+            <label>Start Time <input id="sched-start" type="time" /></label>
+            <label>End Time   <input id="sched-end"   type="time" /></label>
+            <label>Room / Teacher (optional)
+              <input id="sched-room" type="text" placeholder="e.g. Room 3 – Mr. Santos" />
+            </label>
+            <div class="modal-actions">
+              <button id="sched-save-btn" class="btn btn-primary">Save</button>
+              <button id="sched-cancel-btn" class="btn">Cancel</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
