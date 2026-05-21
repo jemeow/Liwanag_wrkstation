@@ -5,51 +5,72 @@
 //          compliance scanner, and active incident response simulation.
 // ============================================================
 
-'use strict';
+"use strict";
 
 // ─── Core State for Security Portal ───
 const SecurityPortalState = {
-  activeTab: 'policies',
-  currentRole: 'Admin', // Default simulated role
+  activeTab: "policies",
+  currentRole: "Admin", // Default simulated role
   policies: {
     minPasswordLength: 8,
     requireSpecialChars: true,
     requireNumeric: true,
     lockoutAfterFailedAttempts: 5,
-    enforceAESGCM: true
+    enforceAESGCM: true,
   },
   firewallRules: [
-    { ip: 'ANY', port: '443', protocol: 'TCP', action: 'ALLOW', description: 'HTTPS Data in Transit' },
-    { ip: 'ANY', port: '80', protocol: 'TCP', action: 'DENY', description: 'HTTP Plaintext Block' },
-    { ip: '10.0.0.12', port: '22', protocol: 'TCP', action: 'ALLOW', description: 'Secure SSH Administration' }
+    {
+      ip: "ANY",
+      port: "443",
+      protocol: "TCP",
+      action: "ALLOW",
+      description: "HTTPS Data in Transit",
+    },
+    {
+      ip: "ANY",
+      port: "80",
+      protocol: "TCP",
+      action: "DENY",
+      description: "HTTP Plaintext Block",
+    },
+    {
+      ip: "10.0.0.12",
+      port: "22",
+      protocol: "TCP",
+      action: "ALLOW",
+      description: "Secure SSH Administration",
+    },
   ],
   auditRunning: false,
-  logs: []
+  logs: [],
 };
 
 // ─── Initialize Portal ───
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener("DOMContentLoaded", () => {
   // Add Security Tab in Sidebar (if not already there)
   injectSecurityNav();
-  
+
   // Add Security Panel in Main Dashboard
   injectSecurityPanel();
 
   // Add event listener for general user activity to log
-  logSecurityEvent('SYSTEM', 'Security Management Console initialized successfully.');
-  
+  logSecurityEvent(
+    "SYSTEM",
+    "Security Management Console initialized successfully.",
+  );
+
   // Trigger initial UI render
   renderSecurityPortal();
-  
+
   // Apply initial role restrictions
   applyRBACRestrictions();
 });
 
 // ─── Inject Navigation & Panel ───
 function injectSecurityNav() {
-  const navList = document.querySelector('.nav-list');
-  if (navList && !document.getElementById('nav-security')) {
-    const securityLi = document.createElement('li');
+  const navList = document.querySelector(".nav-list");
+  if (navList && !document.getElementById("nav-security")) {
+    const securityLi = document.createElement("li");
     securityLi.innerHTML = `
       <button id="nav-security" class="nav-item" onclick="switchPanel('security')">
         <i class="fas fa-shield-alt" style="color: var(--sky-500);"></i>
@@ -61,12 +82,12 @@ function injectSecurityNav() {
 }
 
 function injectSecurityPanel() {
-  const mainContent = document.querySelector('.main-content');
-  if (!mainContent || document.getElementById('panel-security')) return;
+  const mainContent = document.querySelector(".main-content");
+  if (!mainContent || document.getElementById("panel-security")) return;
 
-  const securityDiv = document.createElement('div');
-  securityDiv.id = 'panel-security';
-  securityDiv.className = 'panel';
+  const securityDiv = document.createElement("div");
+  securityDiv.id = "panel-security";
+  securityDiv.className = "panel";
   securityDiv.innerHTML = `
     <div class="panel-header">
       <h2><i class="fas fa-shield-alt"></i> Security & Compliance Center</h2>
@@ -87,9 +108,9 @@ function injectSecurityPanel() {
     </div>
   `;
   mainContent.appendChild(securityDiv);
-  
+
   // Append basic styling
-  const style = document.createElement('style');
+  const style = document.createElement("style");
   style.textContent = `
     .sec-tab {
       flex: 1; padding: 10px 14px; border-radius: var(--radius-xs);
@@ -134,28 +155,28 @@ function injectSecurityPanel() {
 }
 
 // ─── Tab Switching ───
-window.switchSecurityTab = function(tabId) {
+window.switchSecurityTab = function (tabId) {
   SecurityPortalState.activeTab = tabId;
-  document.querySelectorAll('.sec-tab').forEach(btn => {
-    btn.classList.toggle('active', btn.getAttribute('onclick').includes(tabId));
+  document.querySelectorAll(".sec-tab").forEach((btn) => {
+    btn.classList.toggle("active", btn.getAttribute("onclick").includes(tabId));
   });
   renderSecurityPortal();
 };
 
 // ─── Main Render Engine ───
 function renderSecurityPortal() {
-  const contentDiv = document.getElementById('security-tab-content');
+  const contentDiv = document.getElementById("security-tab-content");
   if (!contentDiv) return;
 
   const tab = SecurityPortalState.activeTab;
 
-  if (tab === 'policies') {
+  if (tab === "policies") {
     renderPoliciesTab(contentDiv);
-  } else if (tab === 'rbac') {
+  } else if (tab === "rbac") {
     renderRbacTab(contentDiv);
-  } else if (tab === 'audit') {
+  } else if (tab === "audit") {
     renderAuditTab(contentDiv);
-  } else if (tab === 'incident') {
+  } else if (tab === "incident") {
     renderIncidentTab(contentDiv);
   }
 }
@@ -188,21 +209,21 @@ function renderPoliciesTab(container) {
           <div class="policy-toggle-item">
             <span style="font-size: 0.88rem; font-weight: 500;">Require Special Characters</span>
             <label class="theme-switch" for="policy-special">
-              <input type="checkbox" id="policy-special" ${SecurityPortalState.policies.requireSpecialChars ? 'checked' : ''} onchange="togglePolicy('requireSpecialChars', this.checked)" />
+              <input type="checkbox" id="policy-special" ${SecurityPortalState.policies.requireSpecialChars ? "checked" : ""} onchange="togglePolicy('requireSpecialChars', this.checked)" />
               <div class="slider round"></div>
             </label>
           </div>
           <div class="policy-toggle-item">
             <span style="font-size: 0.88rem; font-weight: 500;">Require Numeric Characters</span>
             <label class="theme-switch" for="policy-numeric">
-              <input type="checkbox" id="policy-numeric" ${SecurityPortalState.policies.requireNumeric ? 'checked' : ''} onchange="togglePolicy('requireNumeric', this.checked)" />
+              <input type="checkbox" id="policy-numeric" ${SecurityPortalState.policies.requireNumeric ? "checked" : ""} onchange="togglePolicy('requireNumeric', this.checked)" />
               <div class="slider round"></div>
             </label>
           </div>
           <div class="policy-toggle-item">
             <span style="font-size: 0.88rem; font-weight: 500;">AES-GCM Encryption (Data at Rest)</span>
             <label class="theme-switch" for="policy-aes">
-              <input type="checkbox" id="policy-aes" ${SecurityPortalState.policies.enforceAESGCM ? 'checked' : ''} onchange="togglePolicy('enforceAESGCM', this.checked)" />
+              <input type="checkbox" id="policy-aes" ${SecurityPortalState.policies.enforceAESGCM ? "checked" : ""} onchange="togglePolicy('enforceAESGCM', this.checked)" />
               <div class="slider round"></div>
             </label>
           </div>
@@ -229,15 +250,19 @@ function renderPoliciesTab(container) {
           </tr>
         </thead>
         <tbody id="fw-rules-body">
-          ${SecurityPortalState.firewallRules.map(r => `
+          ${SecurityPortalState.firewallRules
+            .map(
+              (r) => `
             <tr>
               <td><code>${r.ip}</code></td>
               <td><code>${r.port}</code></td>
               <td><code>${r.protocol}</code></td>
-              <td><span class="${r.action === 'ALLOW' ? 'badge-allow' : 'badge-deny'}">${r.action}</span></td>
+              <td><span class="${r.action === "ALLOW" ? "badge-allow" : "badge-deny"}">${r.action}</span></td>
               <td>${r.description}</td>
             </tr>
-          `).join('')}
+          `,
+            )
+            .join("")}
         </tbody>
       </table>
 
@@ -272,9 +297,9 @@ function renderRbacTab(container) {
       <div style="display: flex; align-items: center; gap: 14px; background: rgba(14, 165, 233, 0.05); padding: 14px; border-radius: var(--radius-sm); margin-bottom: 20px; border: 1px solid rgba(14, 165, 233, 0.1);">
         <span style="font-weight: 700; font-size: 0.9rem; color: var(--gray-800);"><i class="fas fa-user-shield"></i> Active Simulated Role:</span>
         <select id="rbac-role-select" onchange="simulateRoleChange(this.value)" style="padding: 8px 16px; font-weight: 600; font-size: 0.9rem; border: 2px solid var(--sky-400); border-radius: var(--radius-xs); background: var(--input-bg); color: var(--sky-600); cursor: pointer; outline: none;">
-          <option value="Admin" ${SecurityPortalState.currentRole === 'Admin' ? 'selected' : ''}>Admin (Full Access)</option>
-          <option value="Student" ${SecurityPortalState.currentRole === 'Student' ? 'selected' : ''}>Student (Partial Access)</option>
-          <option value="Guest" ${SecurityPortalState.currentRole === 'Guest' ? 'selected' : ''}>Guest (Least Privilege / Focus Only)</option>
+          <option value="Admin" ${SecurityPortalState.currentRole === "Admin" ? "selected" : ""}>Admin (Full Access)</option>
+          <option value="Student" ${SecurityPortalState.currentRole === "Student" ? "selected" : ""}>Student (Partial Access)</option>
+          <option value="Guest" ${SecurityPortalState.currentRole === "Guest" ? "selected" : ""}>Guest (Least Privilege / Focus Only)</option>
         </select>
       </div>
 
@@ -301,17 +326,17 @@ function renderRbacTab(container) {
           <tr>
             <td><strong>Tasks, Notes, Flashcards, Calendar</strong></td>
             <td>Student, Admin</td>
-            <td>${['Student', 'Admin'].includes(SecurityPortalState.currentRole) ? '<span class="badge-allow">GRANTED</span>' : '<span class="badge-deny">DENIED (Guest Restricted)</span>'}</td>
+            <td>${["Student", "Admin"].includes(SecurityPortalState.currentRole) ? '<span class="badge-allow">GRANTED</span>' : '<span class="badge-deny">DENIED (Guest Restricted)</span>'}</td>
           </tr>
           <tr>
             <td><strong>Quizzes</strong></td>
             <td>Student, Admin</td>
-            <td>${['Student', 'Admin'].includes(SecurityPortalState.currentRole) ? '<span class="badge-allow">GRANTED</span>' : '<span class="badge-deny">DENIED (Guest Restricted)</span>'}</td>
+            <td>${["Student", "Admin"].includes(SecurityPortalState.currentRole) ? '<span class="badge-allow">GRANTED</span>' : '<span class="badge-deny">DENIED (Guest Restricted)</span>'}</td>
           </tr>
           <tr>
             <td><strong>Security Portal</strong></td>
             <td>Admin</td>
-            <td>${SecurityPortalState.currentRole === 'Admin' ? '<span class="badge-allow">GRANTED</span>' : '<span class="badge-deny">DENIED (Admin Required)</span>'}</td>
+            <td>${SecurityPortalState.currentRole === "Admin" ? '<span class="badge-allow">GRANTED</span>' : '<span class="badge-deny">DENIED (Admin Required)</span>'}</td>
           </tr>
         </tbody>
       </table>
@@ -320,36 +345,57 @@ function renderRbacTab(container) {
 }
 
 // ─── Render Compliance Audit Tab ───
-window.runComplianceAudit = function() {
+window.runComplianceAudit = function () {
   if (SecurityPortalState.auditRunning) return;
   SecurityPortalState.auditRunning = true;
-  
-  const scanBtn = document.getElementById('btn-run-audit');
-  const progressTrack = document.getElementById('audit-progress-track');
-  const progressBar = document.getElementById('audit-progress-bar');
-  const resultsDiv = document.getElementById('audit-results');
-  
-  if (scanBtn) { scanBtn.disabled = true; scanBtn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Auditing...`; }
-  if (progressTrack) progressTrack.style.display = 'block';
-  if (resultsDiv) resultsDiv.innerHTML = '';
-  
-  logSecurityEvent('AUDIT', 'Security Compliance Audit initiated.');
-  
+
+  const scanBtn = document.getElementById("btn-run-audit");
+  const progressTrack = document.getElementById("audit-progress-track");
+  const progressBar = document.getElementById("audit-progress-bar");
+  const resultsDiv = document.getElementById("audit-results");
+
+  if (scanBtn) {
+    scanBtn.disabled = true;
+    scanBtn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Auditing...`;
+  }
+  if (progressTrack) progressTrack.style.display = "block";
+  if (resultsDiv) resultsDiv.innerHTML = "";
+
+  logSecurityEvent("AUDIT", "Security Compliance Audit initiated.");
+
   let percent = 0;
   const interval = setInterval(() => {
     percent += 10;
-    if (progressBar) progressBar.style.width = percent + '%';
-    
-    if (percent === 30) logSecurityEvent('AUDIT', 'Scanning active network interfaces and local firewall config...');
-    if (percent === 60) logSecurityEvent('AUDIT', 'Analyzing active session token structure and MFA flags...');
-    if (percent === 80) logSecurityEvent('AUDIT', 'Testing local storage databases for active encryption layers...');
+    if (progressBar) progressBar.style.width = percent + "%";
+
+    if (percent === 30)
+      logSecurityEvent(
+        "AUDIT",
+        "Scanning active network interfaces and local firewall config...",
+      );
+    if (percent === 60)
+      logSecurityEvent(
+        "AUDIT",
+        "Analyzing active session token structure and MFA flags...",
+      );
+    if (percent === 80)
+      logSecurityEvent(
+        "AUDIT",
+        "Testing local storage databases for active encryption layers...",
+      );
 
     if (percent >= 100) {
       clearInterval(interval);
       SecurityPortalState.auditRunning = false;
-      if (scanBtn) { scanBtn.disabled = false; scanBtn.innerHTML = `<i class="fas fa-clipboard-check"></i> Run Compliance Audit`; }
+      if (scanBtn) {
+        scanBtn.disabled = false;
+        scanBtn.innerHTML = `<i class="fas fa-clipboard-check"></i> Run Compliance Audit`;
+      }
       renderAuditResults(resultsDiv);
-      logSecurityEvent('AUDIT', 'Audit complete. Policy compliance checklist compiled.');
+      logSecurityEvent(
+        "AUDIT",
+        "Audit complete. Policy compliance checklist compiled.",
+      );
     }
   }, 200);
 };
@@ -363,12 +409,12 @@ function renderAuditResults(container) {
   if (isMfaActive) passedCount++;
   if (isAesActive) passedCount++;
   if (isSpecialRequired) passedCount++;
-  
+
   const score = Math.round((passedCount / 6) * 100);
 
   container.innerHTML = `
     <div style="display: flex; gap: 16px; align-items: center; padding: 16px; background: rgba(14, 165, 233, 0.05); border-radius: var(--radius-sm); border: 1px solid rgba(14, 165, 233, 0.1); margin-top: 20px;">
-      <div style="font-size: 2.2rem; font-weight: 800; color: ${score >= 80 ? '#16a34a' : 'var(--danger)'};">${score}%</div>
+      <div style="font-size: 2.2rem; font-weight: 800; color: ${score >= 80 ? "#16a34a" : "var(--danger)"};">${score}%</div>
       <div>
         <h4 style="color: var(--gray-800);">System Security Score (OpenVAS Standard)</h4>
         <p style="font-size: 0.8rem; color: var(--gray-500);">${passedCount} of 6 essential compliance policies actively passing.</p>
@@ -391,21 +437,21 @@ function renderAuditResults(container) {
       </div>
       <div class="policy-toggle-item">
         <span style="font-size: 0.88rem; font-weight: 500;">
-          <i class="${isMfaActive ? 'fas fa-shield-alt' : 'fas fa-exclamation-triangle'}" style="color: ${isMfaActive ? '#16a34a' : 'var(--danger)'}; margin-right: 6px;"></i> 
+          <i class="${isMfaActive ? "fas fa-shield-alt" : "fas fa-exclamation-triangle"}" style="color: ${isMfaActive ? "#16a34a" : "var(--danger)"}; margin-right: 6px;"></i> 
           MFA Authentication Policy (Two-Factor OTP)
         </span>
         <span>${isMfaActive ? '<span class="badge-allow">PASSED</span>' : '<span class="badge-deny">WARNING (MFA BYPASS DETECTED)</span>'}</span>
       </div>
       <div class="policy-toggle-item">
         <span style="font-size: 0.88rem; font-weight: 500;">
-          <i class="${isAesActive ? 'fas fa-shield-alt' : 'fas fa-exclamation-triangle'}" style="color: ${isAesActive ? '#16a34a' : 'var(--danger)'}; margin-right: 6px;"></i> 
+          <i class="${isAesActive ? "fas fa-shield-alt" : "fas fa-exclamation-triangle"}" style="color: ${isAesActive ? "#16a34a" : "var(--danger)"}; margin-right: 6px;"></i> 
           Cryptographic Protection: AES-GCM Encrypted Notes Storage
         </span>
         <span>${isAesActive ? '<span class="badge-allow">PASSED</span>' : '<span class="badge-deny">WARNING (PLAINTEXT STORAGE RISK)</span>'}</span>
       </div>
       <div class="policy-toggle-item">
         <span style="font-size: 0.88rem; font-weight: 500;">
-          <i class="${isSpecialRequired ? 'fas fa-shield-alt' : 'fas fa-exclamation-triangle'}" style="color: ${isSpecialRequired ? '#16a34a' : 'var(--danger)'}; margin-right: 6px;"></i> 
+          <i class="${isSpecialRequired ? "fas fa-shield-alt" : "fas fa-exclamation-triangle"}" style="color: ${isSpecialRequired ? "#16a34a" : "var(--danger)"}; margin-right: 6px;"></i> 
           Complexity Controls: Require Special Characters in passwords
         </span>
         <span>${isSpecialRequired ? '<span class="badge-allow">PASSED</span>' : '<span class="badge-deny">WARNING (WEAK COMPLEXITY POLICY)</span>'}</span>
@@ -416,8 +462,8 @@ function renderAuditResults(container) {
     <div style="margin-top: 18px; padding: 14px; background: rgba(245, 158, 11, 0.06); border: 1px solid rgba(245, 158, 11, 0.2); border-radius: var(--radius-sm);">
       <h4 style="color: var(--gold-500); margin-bottom: 6px;"><i class="fas fa-lightbulb"></i> Recommended Security Policy Adjustments</h4>
       <ul style="font-size: 0.8rem; color: var(--gray-600); display: flex; flex-direction: column; gap: 6px; padding-left: 14px; list-style-type: disc;">
-        ${!isMfaActive ? '<li><strong>Enforce Mandatory MFA:</strong> Switch verification on inside security options to mitigate account takeover attacks.</li>' : ''}
-        ${!isAesActive ? '<li><strong>Enable AES-GCM Encryption:</strong> Plaintext notes are susceptible to direct database scanning. Toggle Encryption on.</li>' : ''}
+        ${!isMfaActive ? "<li><strong>Enforce Mandatory MFA:</strong> Switch verification on inside security options to mitigate account takeover attacks.</li>" : ""}
+        ${!isAesActive ? "<li><strong>Enable AES-GCM Encryption:</strong> Plaintext notes are susceptible to direct database scanning. Toggle Encryption on.</li>" : ""}
         <li><strong>Credential Rotation:</strong> Establish an organizational policy forcing a password update every 90 days.</li>
       </ul>
     </div>
@@ -486,113 +532,153 @@ function renderIncidentTab(container) {
 }
 
 // ─── Toggles & Controls ───
-window.togglePolicy = function(policyKey, isChecked) {
+window.togglePolicy = function (policyKey, isChecked) {
   SecurityPortalState.policies[policyKey] = isChecked;
-  logSecurityEvent('POLICY', `Configuration rule changed: ${policyKey} set to ${isChecked}.`);
-  
+  logSecurityEvent(
+    "POLICY",
+    `Configuration rule changed: ${policyKey} set to ${isChecked}.`,
+  );
+
   // If toggled AES GCM, hook encryption warning
-  if (policyKey === 'enforceAESGCM') {
+  if (policyKey === "enforceAESGCM") {
     if (isChecked) {
-      logSecurityEvent('ENCRYPTION', 'AES-GCM WebCrypto 128-bit key verified. Data writing marked secure.');
+      logSecurityEvent(
+        "ENCRYPTION",
+        "AES-GCM WebCrypto 128-bit key verified. Data writing marked secure.",
+      );
     } else {
-      logSecurityEvent('ENCRYPTION', 'WARNING: Cryptographic protections disabled! Notes saving in plaintext format.');
+      logSecurityEvent(
+        "ENCRYPTION",
+        "WARNING: Cryptographic protections disabled! Notes saving in plaintext format.",
+      );
     }
   }
 };
 
-window.addFirewallRule = function() {
-  const ip = document.getElementById('fw-ip')?.value.trim();
-  const port = document.getElementById('fw-port')?.value.trim() || 'ANY';
-  const proto = document.getElementById('fw-proto')?.value;
-  const action = document.getElementById('fw-action')?.value;
+window.addFirewallRule = function () {
+  const ip = document.getElementById("fw-ip")?.value.trim();
+  const port = document.getElementById("fw-port")?.value.trim() || "ANY";
+  const proto = document.getElementById("fw-proto")?.value;
+  const action = document.getElementById("fw-action")?.value;
 
   if (!ip) return;
 
   SecurityPortalState.firewallRules.push({
-    ip, port, protocol: proto, action, description: 'Custom User Configured ACL'
+    ip,
+    port,
+    protocol: proto,
+    action,
+    description: "Custom User Configured ACL",
   });
 
-  logSecurityEvent('FIREWALL', `ACL Rule dynamically inserted: ${action} ${proto} traffic on Port ${port} for IP ${ip}.`);
+  logSecurityEvent(
+    "FIREWALL",
+    `ACL Rule dynamically inserted: ${action} ${proto} traffic on Port ${port} for IP ${ip}.`,
+  );
   renderSecurityPortal();
 };
 
 // ─── RBAC Controls ───
-window.simulateRoleChange = function(newRole) {
+window.simulateRoleChange = function (newRole) {
   SecurityPortalState.currentRole = newRole;
-  logSecurityEvent('RBAC', `Authorization context switched to role: ${newRole}.`);
-  
+  logSecurityEvent(
+    "RBAC",
+    `Authorization context switched to role: ${newRole}.`,
+  );
+
   applyRBACRestrictions();
   renderSecurityPortal();
 };
 
 function applyRBACRestrictions() {
   const role = SecurityPortalState.currentRole;
-  
+
   // Define menu items
-  const menuHome = document.getElementById('nav-home');
-  const menuPomo = document.getElementById('nav-pomodoro');
-  const menuTasks = document.getElementById('nav-tasks');
-  const menuNotes = document.getElementById('nav-notes');
-  const menuCards = document.getElementById('nav-flashcards');
-  const menuQuiz = document.getElementById('nav-quizzes');
-  const menuCal = document.getElementById('nav-calendar');
-  const menuSec = document.getElementById('nav-security');
+  const menuHome = document.getElementById("nav-home");
+  const menuPomo = document.getElementById("nav-pomodoro");
+  const menuTasks = document.getElementById("nav-tasks");
+  const menuNotes = document.getElementById("nav-notes");
+  const menuCards = document.getElementById("nav-flashcards");
+  const menuQuiz = document.getElementById("nav-quizzes");
+  const menuCal = document.getElementById("nav-calendar");
+  const menuSec = document.getElementById("nav-security");
 
   // Helper to restrict/permit item
   const updateItem = (el, isPermitted) => {
     if (!el) return;
     if (isPermitted) {
-      el.style.opacity = '1';
-      el.style.pointerEvents = 'auto';
-      el.removeAttribute('title');
+      el.style.opacity = "1";
+      el.style.pointerEvents = "auto";
+      el.removeAttribute("title");
     } else {
-      el.style.opacity = '0.4';
+      el.style.opacity = "0.4";
       // Hook action to show denied alert
-      el.style.pointerEvents = 'auto'; 
+      el.style.pointerEvents = "auto";
       el.onclick = (e) => {
         e.preventDefault();
         e.stopPropagation();
-        SecureAuth.showSecurityBanner(`🚫 RBAC Access Denied: Role "${role}" lacks access permissions!`, 'error');
-        logSecurityEvent('SECURITY VIOLATION', `Unauthorized navigation attempt to protected module blocked for role "${role}".`);
+        SecureAuth.showSecurityBanner(
+          `🚫 RBAC Access Denied: Role "${role}" lacks access permissions!`,
+          "error",
+        );
+        logSecurityEvent(
+          "SECURITY VIOLATION",
+          `Unauthorized navigation attempt to protected module blocked for role "${role}".`,
+        );
       };
     }
   };
 
-  if (role === 'Admin') {
+  if (role === "Admin") {
     // Admins can do everything
-    updateItem(menuHome, true); menuHome.onclick = () => switchPanel('home');
-    updateItem(menuPomo, true); menuPomo.onclick = () => switchPanel('pomodoro');
-    updateItem(menuTasks, true); menuTasks.onclick = () => switchPanel('tasks');
-    updateItem(menuNotes, true); menuNotes.onclick = () => switchPanel('notes');
-    updateItem(menuCards, true); menuCards.onclick = () => switchPanel('flashcards');
-    updateItem(menuQuiz, true); menuQuiz.onclick = () => switchPanel('quizzes');
-    updateItem(menuCal, true); menuCal.onclick = () => switchPanel('calendar');
-    updateItem(menuSec, true); menuSec.onclick = () => switchPanel('security');
-  } 
-  else if (role === 'Student') {
+    updateItem(menuHome, true);
+    menuHome.onclick = () => switchPanel("home");
+    updateItem(menuPomo, true);
+    menuPomo.onclick = () => switchPanel("pomodoro");
+    updateItem(menuTasks, true);
+    menuTasks.onclick = () => switchPanel("tasks");
+    updateItem(menuNotes, true);
+    menuNotes.onclick = () => switchPanel("notes");
+    updateItem(menuCards, true);
+    menuCards.onclick = () => switchPanel("flashcards");
+    updateItem(menuQuiz, true);
+    menuQuiz.onclick = () => switchPanel("quizzes");
+    updateItem(menuCal, true);
+    menuCal.onclick = () => switchPanel("calendar");
+    updateItem(menuSec, true);
+    menuSec.onclick = () => switchPanel("security");
+  } else if (role === "Student") {
     // Students cannot access security page, but can access others
-    updateItem(menuHome, true); menuHome.onclick = () => switchPanel('home');
-    updateItem(menuPomo, true); menuPomo.onclick = () => switchPanel('pomodoro');
-    updateItem(menuTasks, true); menuTasks.onclick = () => switchPanel('tasks');
-    updateItem(menuNotes, true); menuNotes.onclick = () => switchPanel('notes');
-    updateItem(menuCards, true); menuCards.onclick = () => switchPanel('flashcards');
-    updateItem(menuQuiz, true); menuQuiz.onclick = () => switchPanel('quizzes');
-    updateItem(menuCal, true); menuCal.onclick = () => switchPanel('calendar');
-    
+    updateItem(menuHome, true);
+    menuHome.onclick = () => switchPanel("home");
+    updateItem(menuPomo, true);
+    menuPomo.onclick = () => switchPanel("pomodoro");
+    updateItem(menuTasks, true);
+    menuTasks.onclick = () => switchPanel("tasks");
+    updateItem(menuNotes, true);
+    menuNotes.onclick = () => switchPanel("notes");
+    updateItem(menuCards, true);
+    menuCards.onclick = () => switchPanel("flashcards");
+    updateItem(menuQuiz, true);
+    menuQuiz.onclick = () => switchPanel("quizzes");
+    updateItem(menuCal, true);
+    menuCal.onclick = () => switchPanel("calendar");
+
     // Lock Security
     updateItem(menuSec, false);
-    
+
     // Force home if currently on locked page
-    const activePanel = document.querySelector('.panel.active');
-    if (activePanel && activePanel.id === 'panel-security') {
-      switchPanel('home');
+    const activePanel = document.querySelector(".panel.active");
+    if (activePanel && activePanel.id === "panel-security") {
+      switchPanel("home");
     }
-  } 
-  else if (role === 'Guest') {
+  } else if (role === "Guest") {
     // Guests can ONLY access Home and Pomodoro
-    updateItem(menuHome, true); menuHome.onclick = () => switchPanel('home');
-    updateItem(menuPomo, true); menuPomo.onclick = () => switchPanel('pomodoro');
-    
+    updateItem(menuHome, true);
+    menuHome.onclick = () => switchPanel("home");
+    updateItem(menuPomo, true);
+    menuPomo.onclick = () => switchPanel("pomodoro");
+
     updateItem(menuTasks, false);
     updateItem(menuNotes, false);
     updateItem(menuCards, false);
@@ -601,9 +687,12 @@ function applyRBACRestrictions() {
     updateItem(menuSec, false);
 
     // Force home if currently on locked page
-    const activePanel = document.querySelector('.panel.active');
-    if (activePanel && !['panel-home', 'panel-pomodoro'].includes(activePanel.id)) {
-      switchPanel('home');
+    const activePanel = document.querySelector(".panel.active");
+    if (
+      activePanel &&
+      !["panel-home", "panel-pomodoro"].includes(activePanel.id)
+    ) {
+      switchPanel("home");
     }
   }
 }
@@ -616,56 +705,95 @@ function logSecurityEvent(type, message) {
   updateSecurityConsoleUI();
 }
 
-window.clearSecurityConsole = function() {
+window.clearSecurityConsole = function () {
   SecurityPortalState.logs = [];
-  logSecurityEvent('SYSTEM', 'Console cleared.');
+  logSecurityEvent("SYSTEM", "Console cleared.");
 };
 
 function updateSecurityConsoleUI() {
-  const consoleEl = document.getElementById('security-console');
+  const consoleEl = document.getElementById("security-console");
   if (!consoleEl) return;
-  consoleEl.innerHTML = SecurityPortalState.logs.map(log => {
-    let color = '#38bdf8'; // sky blue
-    if (log.includes('denied') || log.includes('ATTACK') || log.includes('VIOLATION')) color = '#f87171'; // red
-    if (log.includes('SUCCESS') || log.includes('PASSED')) color = '#4ade80'; // green
-    if (log.includes('POLICY')) color = '#eab308'; // gold
-    return `<div style="color: ${color};">${log}</div>`;
-  }).join('');
+  consoleEl.innerHTML = SecurityPortalState.logs
+    .map((log) => {
+      let color = "#38bdf8"; // sky blue
+      if (
+        log.includes("denied") ||
+        log.includes("ATTACK") ||
+        log.includes("VIOLATION")
+      )
+        color = "#f87171"; // red
+      if (log.includes("SUCCESS") || log.includes("PASSED")) color = "#4ade80"; // green
+      if (log.includes("POLICY")) color = "#eab308"; // gold
+      return `<div style="color: ${color};">${log}</div>`;
+    })
+    .join("");
   consoleEl.scrollTop = 0; // newest at top
 }
 
-window.simulateBreach = function(type) {
-  if (type === 'bruteforce') {
-    logSecurityEvent('ATTACK_DETECTION', 'SSH/Web Authentication Failure anomaly detected from host IP 192.168.1.105.');
+window.simulateBreach = function (type) {
+  if (type === "bruteforce") {
+    logSecurityEvent(
+      "ATTACK_DETECTION",
+      "SSH/Web Authentication Failure anomaly detected from host IP 192.168.1.105.",
+    );
     let count = 1;
     const interval = setInterval(() => {
-      logSecurityEvent('ATTACK_DETECTION', `Invalid Login Credentials attempted from 192.168.1.105 (Attempt ${count}/5).`);
+      logSecurityEvent(
+        "ATTACK_DETECTION",
+        `Invalid Login Credentials attempted from 192.168.1.105 (Attempt ${count}/5).`,
+      );
       count++;
       if (count > 5) {
         clearInterval(interval);
         // Automated mitigation steps
-        logSecurityEvent('AUTOMATED_RESPONSE', 'ALERT: 5 failed attempts reached from IP 192.168.1.105.');
-        logSecurityEvent('AUTOMATED_RESPONSE', 'INCIDENT CONTAINMENT: Temporarily blacklisting source IP address.');
-        
+        logSecurityEvent(
+          "AUTOMATED_RESPONSE",
+          "ALERT: 5 failed attempts reached from IP 192.168.1.105.",
+        );
+        logSecurityEvent(
+          "AUTOMATED_RESPONSE",
+          "INCIDENT CONTAINMENT: Temporarily blacklisting source IP address.",
+        );
+
         // Push firewall deny rule
         SecurityPortalState.firewallRules.push({
-          ip: '192.168.1.105', port: 'ANY', protocol: 'ANY', action: 'DENY', description: 'AUTOMATED CONTAINMENT: Brute-Force Block'
+          ip: "192.168.1.105",
+          port: "ANY",
+          protocol: "ANY",
+          action: "DENY",
+          description: "AUTOMATED CONTAINMENT: Brute-Force Block",
         });
-        
-        logSecurityEvent('AUTOMATED_RESPONSE', 'INCIDENT ERADICATION: Rule actively pushed into system firewall tables.');
-        SecureAuth.showSecurityBanner('⚠️ INTRUSION CONTAINED: Malicious host 192.168.1.105 actively blocked!', 'error', 8000);
+
+        logSecurityEvent(
+          "AUTOMATED_RESPONSE",
+          "INCIDENT ERADICATION: Rule actively pushed into system firewall tables.",
+        );
+        SecureAuth.showSecurityBanner(
+          "⚠️ INTRUSION CONTAINED: Malicious host 192.168.1.105 actively blocked!",
+          "error",
+          8000,
+        );
       }
     }, 400);
-  } 
-  else if (type === 'intrusion') {
-    logSecurityEvent('ATTACK_DETECTION', 'CRITICAL ALERT: SQL Injection pattern matched on notes retrieval pipeline!');
+  } else if (type === "intrusion") {
+    logSecurityEvent(
+      "ATTACK_DETECTION",
+      "CRITICAL ALERT: SQL Injection pattern matched on notes retrieval pipeline!",
+    );
     setTimeout(() => {
-      logSecurityEvent('AUTOMATED_RESPONSE', 'AUTOMATED MITIGATION: Terminating active session immediately to isolate environment.');
-      SecureAuth.showSecurityBanner('🚨 CRITICAL INTRUSION THREAT DETECTED: Auto-Isolating Workspace Session!', 'error', 6000);
-      
+      logSecurityEvent(
+        "AUTOMATED_RESPONSE",
+        "AUTOMATED MITIGATION: Terminating active session immediately to isolate environment.",
+      );
+      SecureAuth.showSecurityBanner(
+        "🚨 CRITICAL INTRUSION THREAT DETECTED: Auto-Isolating Workspace Session!",
+        "error",
+        6000,
+      );
+
       setTimeout(() => {
         // Force manual logout
-        SecureAuth.performSecureLogout('timeout');
+        SecureAuth.performSecureLogout("timeout");
       }, 3000);
     }, 1500);
   }
