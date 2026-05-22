@@ -139,21 +139,68 @@ window.initializeDashboard = function (user) {
   initCalendar(user.uid);
 };
 
+// Safety Fallback: If Firebase hangs on Android WebViews, force hide loading screen after 4 seconds
+const initFallbackTimeout = setTimeout(() => {
+  const overlay = document.getElementById("loading-overlay");
+  if (overlay && overlay.style.display !== "none" && !overlay.classList.contains("fade-out") && !overlay.classList.contains("hidden")) {
+    console.warn("[App] Firebase initialization timed out. Forcing loading screen to hide.");
+    hideLoading();
+    document.getElementById("auth-screen").classList.remove("hidden");
+    document.getElementById("dashboard").classList.add("hidden");
+  }
+}, 4000);
+
 // ===== AUTH STATE LISTENER =====
 auth.onAuthStateChanged((user) => {
+  clearTimeout(initFallbackTimeout);
   if (user) {
     // ── MFA Guard ──────────────────────────────────────────────────────
-    // Firebase auth listener fires the moment the password is correct,
-    // but before the OTP is generated. We must STRICTLY block the dashboard
-    // until the user actually passes the MFA check.
     if (
       typeof SecureAuth !== "undefined" &&
       !SecureAuth.SessionManager.isMFAVerified()
     ) {
       console.log(
-        "[App] Firebase user active but MFA not verified yet — holding dashboard.",
+        "[App] Firebase user active but Session token/MFA not verified yet. Checking Firestore MFA settings...",
       );
-      hideLoading();
+      db.collection("users")
+        .doc(user.uid)
+        .get()
+        .then((doc) => {
+          const mfaEnabled =
+            doc.exists && doc.data().mfaEnabled !== undefined
+              ? doc.data().mfaEnabled
+              : true;
+          if (!mfaEnabled) {
+            console.log(
+              "[App] MFA is disabled for this user. Auto-verifying session.",
+            );
+            SecureAuth.SessionManager.setMFAVerified();
+            SecureAuth.SessionManager.saveToken(user.uid, user.email).then(
+              () => {
+                initializeDashboard(user);
+              },
+            );
+          } else {
+            console.log(
+              "[App] MFA is enabled. Holding dashboard for verification.",
+            );
+            hideLoading();
+            
+            // Auto-trigger the MFA modal if the user refreshed the page and is stuck in limbo
+            if (typeof window.openMFAModal === "function") {
+              sessionStorage.setItem("liwanag_pending_mfa_email", user.email);
+              if (!SecureAuth.OTPManager.hasPendingOTP()) {
+                const otp = SecureAuth.OTPManager.generate();
+                SecureAuth.sendOTPEmail(user.email, otp);
+              }
+              window.openMFAModal(user.email);
+            }
+          }
+        })
+        .catch((err) => {
+          console.error("[App] Error checking MFA settings in Firestore:", err);
+          hideLoading();
+        });
       return; // Stay on auth screen
     }
 

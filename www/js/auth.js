@@ -116,6 +116,19 @@ function openSettingsModal() {
   
   if (currentUser) {
     document.getElementById("profile-display-name").value = currentUser.displayName || "";
+    
+    // Fetch user's MFA settings from Firestore
+    const statusText = document.getElementById("mfa-status-text");
+    if (statusText) statusText.textContent = "Status: Loading...";
+    
+    db.collection("users").doc(currentUser.uid).get().then((doc) => {
+      const mfaEnabled = doc.exists && doc.data().mfaEnabled !== undefined ? doc.data().mfaEnabled : true;
+      window.mfaEnabledState = mfaEnabled;
+      updateMFAStatusUI(mfaEnabled);
+    }).catch((err) => {
+      console.error("Error fetching MFA settings:", err);
+      if (statusText) statusText.textContent = "Status: Error loading";
+    });
   }
 }
 
@@ -130,6 +143,58 @@ function closeSettingsModal() {
   document.getElementById("confirm-email-input").value = "";
   document.getElementById("new-password-input").value = "";
   document.getElementById("password-feedback").classList.add("hidden");
+  
+  // Reset MFA modal header text
+  const mfaTitle = document.getElementById("mfa-title");
+  if (mfaTitle) mfaTitle.textContent = "Two-Factor Authentication";
+}
+
+function updateMFAStatusUI(enabled) {
+  const statusText = document.getElementById("mfa-status-text");
+  const checkbox = document.getElementById("mfa-checkbox");
+  if (statusText) {
+    statusText.textContent = enabled ? "Status: ENABLED" : "Status: DISABLED";
+    statusText.style.color = enabled ? "var(--success)" : "var(--gray-500)";
+  }
+  if (checkbox) {
+    checkbox.checked = enabled;
+  }
+}
+
+function syncMFACheckbox() {
+  const checkbox = document.getElementById("mfa-checkbox");
+  if (checkbox) {
+    checkbox.checked = !!window.mfaEnabledState;
+  }
+  updateMFAStatusUI(!!window.mfaEnabledState);
+}
+
+async function handleMFAToggleClick(checkbox) {
+  if (!currentUser) return;
+  
+  const intendedNewState = checkbox.checked;
+  
+  try {
+    // Save directly to Firestore without OTP verification
+    await db.collection("users").doc(currentUser.uid).set({
+      mfaEnabled: intendedNewState
+    }, { merge: true });
+    
+    window.mfaEnabledState = intendedNewState;
+    if (typeof updateMFAStatusUI === "function") {
+      updateMFAStatusUI(intendedNewState);
+    }
+    
+    SecureAuth.showSecurityBanner(
+      `✅ Two-factor authentication has been ${intendedNewState ? "enabled" : "disabled"}.`,
+      "success",
+    );
+  } catch (dbErr) {
+    console.error("Error saving MFA status to Firestore:", dbErr);
+    SecureAuth.showSecurityBanner("❌ Failed to update MFA settings. Please try again.", "error");
+    checkbox.checked = !intendedNewState; // Revert checkbox
+    if (typeof syncMFACheckbox === "function") syncMFACheckbox();
+  }
 }
 
 async function updateProfile() {

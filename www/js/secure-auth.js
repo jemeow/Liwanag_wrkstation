@@ -421,11 +421,30 @@ async function secureLogin(email, password) {
     // Persist the email so MFA modal can restore after page refresh
     sessionStorage.setItem(AUTH_CONFIG.MFA_EMAIL_KEY, credential.user.email);
 
-    // Trigger MFA
-    const otp = OTPManager.generate();
-    await sendOTPEmail(credential.user.email, otp);
+    // Check if MFA is enabled in Firestore for this user
+    let mfaEnabled = true;
+    try {
+      const userDoc = await db.collection("users").doc(credential.user.uid).get();
+      if (userDoc.exists && userDoc.data().mfaEnabled !== undefined) {
+        mfaEnabled = userDoc.data().mfaEnabled;
+      }
+    } catch (dbErr) {
+      console.warn("[SecureAuth] Could not fetch user doc for MFA check, defaulting to true:", dbErr);
+    }
 
-    return { success: true, mfaRequired: true, user: credential.user };
+    if (mfaEnabled) {
+      // Trigger MFA
+      const otp = OTPManager.generate();
+      await sendOTPEmail(credential.user.email, otp);
+      return { success: true, mfaRequired: true, user: credential.user };
+    } else {
+      // MFA is disabled - log them in directly
+      await SessionManager.saveToken(credential.user.uid, credential.user.email);
+      SessionManager.setMFAVerified();
+      _clearOTPState();
+      startSessionTimeout();
+      return { success: true, mfaRequired: false, user: credential.user };
+    }
   } catch (err) {
     const attempts = RateLimiter.incrementAttempts(email);
     const remaining = AUTH_CONFIG.MAX_LOGIN_ATTEMPTS - attempts;
@@ -680,6 +699,7 @@ window.SecureAuth = {
   OTPManager,
   resetSessionTimeout,
   hasPendingMFA,
+  sendOTPEmail,
   // Exposed so the UI layer can wipe OTP state on cancel
   _clearOTPState,
 };

@@ -170,6 +170,16 @@ document.addEventListener("DOMContentLoaded", () => {
     sessionStorage.removeItem("liwanag_pending_otp");
     sessionStorage.removeItem("liwanag_otp_expiry");
     sessionStorage.removeItem("liwanag_pending_mfa_email");
+    
+    // Custom cancel flow for toggling context
+    if (window.mfaVerificationContext === "toggle") {
+      if (typeof syncMFACheckbox === "function") syncMFACheckbox();
+      window.mfaVerificationContext = "login";
+      const mfaTitle = document.getElementById("mfa-title");
+      if (mfaTitle) mfaTitle.textContent = "Two-Factor Authentication";
+      return;
+    }
+
     // Sign out the pending Firebase user
     auth.signOut();
   };
@@ -187,25 +197,63 @@ document.addEventListener("DOMContentLoaded", () => {
     btn.disabled = true;
     btn.textContent = "Verifying…";
 
-    const result = await SecureAuth.verifyMFAOTP(otp);
-
-    if (result.success) {
-      clearInterval(otpCountdownInterval);
-      const modal = document.getElementById("mfa-modal");
-      modal.classList.remove("visible");
-      setTimeout(() => modal.classList.add("hidden"), 300);
-      SecureAuth.showSecurityBanner(
-        "✅ MFA verified! Welcome back.",
-        "success",
-      );
-      // Manually trigger dashboard initialization now that MFA is completely passed
-      if (typeof window.initializeDashboard === "function") {
-        window.initializeDashboard(result.user);
+    if (window.mfaVerificationContext === "toggle") {
+      const result = SecureAuth.OTPManager.verify(otp);
+      if (result.valid) {
+        clearInterval(otpCountdownInterval);
+        const modal = document.getElementById("mfa-modal");
+        modal.classList.remove("visible");
+        setTimeout(() => modal.classList.add("hidden"), 300);
+        
+        try {
+          await db.collection("users").doc(currentUser.uid).set({
+            mfaEnabled: window.pendingMfaState
+          }, { merge: true });
+          
+          window.mfaEnabledState = window.pendingMfaState;
+          if (typeof updateMFAStatusUI === "function") {
+            updateMFAStatusUI(window.pendingMfaState);
+          }
+          
+          SecureAuth.showSecurityBanner(
+            `✅ Two-factor authentication has been ${window.pendingMfaState ? "enabled" : "disabled"}.`,
+            "success",
+          );
+        } catch (dbErr) {
+          console.error("Error saving MFA status to Firestore:", dbErr);
+          SecureAuth.showSecurityBanner("❌ Failed to update MFA settings. Please try again.", "error");
+          if (typeof syncMFACheckbox === "function") syncMFACheckbox();
+        }
+        
+        window.mfaVerificationContext = "login";
+        const mfaTitle = document.getElementById("mfa-title");
+        if (mfaTitle) mfaTitle.textContent = "Two-Factor Authentication";
+      } else {
+        setMFAError(result.reason);
+        input.value = "";
+        input.focus();
       }
     } else {
-      setMFAError(result.error);
-      input.value = "";
-      input.focus();
+      const result = await SecureAuth.verifyMFAOTP(otp);
+
+      if (result.success) {
+        clearInterval(otpCountdownInterval);
+        const modal = document.getElementById("mfa-modal");
+        modal.classList.remove("visible");
+        setTimeout(() => modal.classList.add("hidden"), 300);
+        SecureAuth.showSecurityBanner(
+          "✅ MFA verified! Welcome back.",
+          "success",
+        );
+        // Manually trigger dashboard initialization now that MFA is completely passed
+        if (typeof window.initializeDashboard === "function") {
+          window.initializeDashboard(result.user);
+        }
+      } else {
+        setMFAError(result.error);
+        input.value = "";
+        input.focus();
+      }
     }
 
     btn.disabled = false;

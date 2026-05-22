@@ -362,13 +362,17 @@ function checkUpcomingNotifications() {
   const badge = document.getElementById("noti-badge");
   const mobBadge = document.getElementById("mobile-noti-badge");
 
-  const count = notifications.length;
+  const lastSeen = parseInt(localStorage.getItem(`liwanag_noti_seen_${calendarUserId}`) || "0");
+  let unreadCount = 0;
+  notifications.forEach(n => {
+    if (n.createdAt > lastSeen) unreadCount++;
+  });
 
   // Update Badges
   if (badge && mobBadge) {
-    badge.textContent = count;
-    mobBadge.textContent = count;
-    if (count > 0) {
+    badge.textContent = unreadCount;
+    mobBadge.textContent = unreadCount;
+    if (unreadCount > 0) {
       badge.classList.remove("hidden");
       mobBadge.classList.remove("hidden");
     } else {
@@ -381,7 +385,7 @@ function checkUpcomingNotifications() {
     if (!el) return;
     el.innerHTML = "";
 
-    if (count === 0) {
+    if (notifications.length === 0) {
       el.innerHTML = `
         <div style="text-align: center; padding: 24px 8px; color: var(--gray-400);">
           <i class="fas fa-bell-slash" style="font-size: 1.5rem; margin-bottom: 8px; opacity: 0.5;"></i>
@@ -418,6 +422,8 @@ function toggleNotifications(event) {
   const mobDropdown = document.getElementById("mobile-noti-dropdown");
   if (!dropdown || !mobDropdown) return;
 
+  let isOpening = false;
+
   if (
     event &&
     event.currentTarget &&
@@ -426,9 +432,22 @@ function toggleNotifications(event) {
   ) {
     mobDropdown.classList.toggle("hidden");
     dropdown.classList.add("hidden");
+    isOpening = !mobDropdown.classList.contains("hidden");
   } else {
     dropdown.classList.toggle("hidden");
     mobDropdown.classList.add("hidden");
+    isOpening = !dropdown.classList.contains("hidden");
+  }
+
+  if (isOpening) {
+    const badge = document.getElementById("noti-badge");
+    const mobBadge = document.getElementById("mobile-noti-badge");
+    if (badge) badge.classList.add("hidden");
+    if (mobBadge) mobBadge.classList.add("hidden");
+    
+    if (calendarUserId) {
+      localStorage.setItem(`liwanag_noti_seen_${calendarUserId}`, Date.now().toString());
+    }
   }
 }
 

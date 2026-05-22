@@ -140,6 +140,28 @@
 html {
   scroll-behavior: smooth;
 }
+
+/* Global Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(14, 165, 233, 0.25);
+  border-radius: 10px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(14, 165, 233, 0.4);
+}
+[data-theme="dark"] ::-webkit-scrollbar-thumb {
+  background: rgba(14, 165, 233, 0.15);
+}
+[data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
+  background: rgba(14, 165, 233, 0.3);
+}
 body {
   font-family: var(--font);
   background: var(--bg-gradient);
@@ -1208,12 +1230,12 @@ input:checked + .slider:before {
 .notes-editor {
   width: 100%;
   min-height: 320px;
-  padding: 16px;
+  padding: 12px;
   background: var(--input-bg);
   border: 2px solid var(--gray-200);
   border-radius: var(--radius-sm);
-  font-size: 0.95rem;
-  line-height: 1.7;
+  font-size: 0.85rem;
+  line-height: 1.5;
   transition: var(--transition);
   color: var(--gray-800);
   overflow-y: auto;
@@ -1249,7 +1271,8 @@ input:checked + .slider:before {
 .color-palette-popover {
   position: absolute;
   top: 100%;
-  left: 0;
+  right: 0;
+  left: auto;
   margin-top: 8px;
   padding: 12px;
   border: 1px solid var(--gray-200);
@@ -1679,6 +1702,7 @@ input:checked + .slider:before {
   font-size: 0.85rem;
   color: var(--gray-500);
 }
+
 .recent-tasks-container {
   min-height: 120px;
 }
@@ -1783,12 +1807,12 @@ input:checked + .slider:before {
   box-shadow: 0 4px 12px rgba(14, 165, 233, 0.3);
 }
 .reminder-dot {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
   border-radius: 50%;
   background: var(--gold-500);
   position: absolute;
-  bottom: 8px;
+  bottom: 3px;
 }
 .calendar-day.selected .reminder-dot {
   background: white;
@@ -2123,7 +2147,7 @@ input:checked + .slider:before {
 
 /* ── Security Badge Row ── */
 .security-badge {
-  display: flex;
+  display: none !important;
   flex-wrap: wrap;
   gap: 6px;
   justify-content: center;
@@ -2168,6 +2192,9 @@ input:checked + .slider:before {
   opacity: 0;
   transition: opacity 0.3s ease;
 }
+#mfa-modal {
+  z-index: 10005; /* Ensure OTP verification sits on top of Settings modal */
+}
 .mfa-overlay.visible {
   opacity: 1;
 }
@@ -2186,27 +2213,27 @@ input:checked + .slider:before {
 }
 .mfa-header {
   background: linear-gradient(135deg, var(--sky-500), var(--sky-700));
-  padding: 32px 28px 24px;
+  padding: 20px 24px 16px;
   text-align: center;
   color: white;
 }
 .mfa-icon {
-  width: 64px;
-  height: 64px;
-  margin: 0 auto 16px;
+  width: 42px;
+  height: 42px;
+  margin: 0 auto 8px;
   background: rgba(255, 255, 255, 0.2);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.8rem;
+  font-size: 1.2rem;
   backdrop-filter: blur(4px);
   border: 2px solid rgba(255, 255, 255, 0.3);
 }
 .mfa-header h2 {
-  font-size: 1.35rem;
+  font-size: 1.15rem;
   font-weight: 800;
-  margin-bottom: 8px;
+  margin-bottom: 4px;
   letter-spacing: -0.3px;
 }
 .mfa-header p {
@@ -2224,6 +2251,15 @@ input:checked + .slider:before {
   display: flex;
   flex-direction: column;
   gap: 14px;
+  max-height: 65vh;
+  overflow-y: auto;
+}
+.mfa-body::-webkit-scrollbar {
+  width: 6px;
+}
+.mfa-body::-webkit-scrollbar-thumb {
+  background: var(--gray-300);
+  border-radius: 3px;
 }
 
 /* ── OTP Input ── */
@@ -2426,6 +2462,43 @@ input:checked + .slider:before {
     padding-bottom: 4px;
   }
 
+  /* Hide redundant buttons from welcome card on mobile */
+  .welcome-stats #restore-floating-btn,
+  .welcome-stats .notification-wrapper {
+    display: none !important;
+  }
+
+  /* Mobile Master-Detail Notes Layout */
+  .notes-container {
+    flex-direction: row !important;
+    height: 75vh !important;
+  }
+  
+  .notes-sidebar {
+    width: 100% !important;
+    min-width: 100% !important;
+    border-right: none !important;
+    max-height: none !important;
+  }
+
+  .notes-main-pane {
+    display: none !important;
+    width: 100% !important;
+    min-width: 100% !important;
+  }
+
+  .notes-container.viewing-note .notes-sidebar {
+    display: none !important;
+  }
+
+  .notes-container.viewing-note .notes-main-pane {
+    display: flex !important;
+  }
+
+  .mobile-back-btn {
+    display: inline-flex !important;
+  }
+
   /* Home Dashboard Grids */
   .home-grid {
     display: flex;
@@ -2461,9 +2534,7 @@ input:checked + .slider:before {
     font-size: 0.95rem;
     color: var(--gray-800);
   }
-  [data-theme="dark"] .quick-action-title {
-    color: var(--gray-200);
-  }
+
   .quick-action-desc {
     font-size: 0.75rem;
     color: var(--gray-500);
@@ -2486,4 +2557,16 @@ input:checked + .slider:before {
     flex-wrap: nowrap;
     -webkit-overflow-scrolling: touch;
   }
+}
+
+/* Global Utility Classes */
+.mobile-back-btn {
+  display: none;
+}
+.fab-btn {
+  transition: transform 0.2s, background 0.2s;
+}
+.fab-btn:hover {
+  transform: scale(1.05);
+  background: var(--gold-500);
 }
